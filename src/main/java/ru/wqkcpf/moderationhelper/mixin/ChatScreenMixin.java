@@ -1,6 +1,7 @@
 package ru.wqkcpf.moderationhelper.mixin;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -18,11 +19,21 @@ public abstract class ChatScreenMixin extends Screen {
         super(title);
     }
 
+    /**
+     * Minecraft 1.21.11 changed mouseClicked signature:
+     * old: mouseClicked(double mouseX, double mouseY, int button)
+     * new: mouseClicked(Click click, boolean doubled)
+     */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-    private void mhg$onMiddleClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        if (button != GLFW.GLFW_MOUSE_BUTTON_MIDDLE) return;
+    private void mhg$onMiddleClick(Click click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
+        if (click.button() != GLFW.GLFW_MOUSE_BUTTON_MIDDLE) return;
 
-        String rawMessage = ChatMessageExtractor.extractMessageUnderMouse(MinecraftClient.getInstance(), mouseX, mouseY);
+        String rawMessage = ChatMessageExtractor.extractMessageUnderMouse(
+                MinecraftClient.getInstance(),
+                click.x(),
+                click.y()
+        );
+
         ChatClickHandler.handleMiddleClick(rawMessage);
         cir.setReturnValue(true);
     }
